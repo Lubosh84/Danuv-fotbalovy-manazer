@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b1b17">
+<meta name="theme-color" content="#166534">
 <meta name="description" content="Matematický trenažér pro 6.–9. ročník a přípravu na Cermat – s postupem, opakováním chyb a statistikami.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -32,7 +32,7 @@ h2{font-size:15px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;m
 .ghost{padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600}
 .btn{padding:14px 22px;border-radius:14px;background:var(--pitch);color:#10230a;font-weight:800;font-size:17px;width:100%}.btn:hover{filter:brightness(1.08)}.btn.sec{background:var(--sky);color:#06222f}
 .row{display:flex;gap:10px}.row>*{flex:1}
-.prog{display:flex;gap:5px;margin:4px 0 14px}.prog i{flex:1;height:8px;border-radius:5px;background:var(--card2)}.prog .ok{background:var(--ok)}.prog .bad{background:var(--bad)}.prog .cur{background:var(--sky)}
+.prog{display:flex;gap:6px;margin:4px 0 14px;justify-content:center}.prog i{flex:1;max-width:36px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:17px;font-style:normal;background:var(--card2);border:2px solid var(--line)}.prog .cur{border-color:var(--sky);animation:pulse 1s infinite alternate}@keyframes pulse{to{box-shadow:0 0 0 4px #38bdf855}}
 .meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);margin-bottom:12px;gap:8px}.topic{color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 .q{font-size:21px;font-weight:700;line-height:1.45;padding:16px;background:var(--card2);border-left:5px solid var(--pitch);border-radius:8px;margin-bottom:14px}
 .note{font-size:13px;color:var(--mut);margin-bottom:12px}
@@ -46,6 +46,17 @@ input:focus{border-color:var(--sky);outline:none}
 .h{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid var(--line)}.h span:last-child{color:var(--mut)}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--card);border:1px solid var(--pitch);padding:10px 18px;border-radius:12px;z-index:9}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.hero{background:linear-gradient(#0a1512,#122a24);border:2px solid var(--line);border-radius:18px;padding:18px 16px 16px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:8px;border:2px solid #ffffff1c;border-radius:10px}.hero:after{content:"";position:absolute;left:50%;top:8px;bottom:8px;border-left:2px solid #ffffff1c}
+.hero>*{position:relative;z-index:1}.sb{display:flex;justify-content:center;align-items:flex-start;gap:22px;font:800 46px/1 ui-monospace,Menlo,Consolas,monospace;color:var(--gold);text-shadow:0 0 14px #fbbf2466}
+.sb div{min-width:110px;text-align:center}.sb small{font:700 11px system-ui;color:var(--mut);letter-spacing:2px;display:block;margin-top:8px;text-shadow:none}
+.mode{position:relative;overflow:hidden;border-left:6px solid var(--pitch)}.mode.cer{border-left-color:#a78bfa}.mode.top{border-left-color:var(--sky)}.mode.red{border-left-color:var(--bad)}
+.mode .no{position:absolute;right:10px;bottom:-8px;font:900 64px/1 Impact,'Arial Black',system-ui;font-style:normal;color:transparent;-webkit-text-stroke:2px #ffffff22;pointer-events:none}
+#game .panel{background:var(--card) url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200'><g fill='none' stroke='white' stroke-opacity='.07' stroke-width='3'><rect x='50' y='-3' width='200' height='110'/><rect x='105' y='-3' width='90' height='44'/><path d='M115 107a40 40 0 0 0 70 0'/></g></svg>") no-repeat top center/100%}
+.badges{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bd{padding:10px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-size:13px}.bd.off{opacity:.35;filter:grayscale(1)}.bd b{display:block;font-size:14px}
+.rep p{margin:6px 0}.rep{font-size:15px}
+#sheet{display:none}
+@media print{body{background:#fff!important;color:#111}#app>*:not(#sheet){display:none!important}#sheet{display:block;font-family:Georgia,serif;border:6px double #166534;padding:28px;color:#111}#sheet h1{text-align:center;color:#166534}#sheet table{width:100%;border-collapse:collapse;margin-top:12px}#sheet td{border-bottom:1px solid #ccc;padding:4px}}
 </style>
 </head>
 <body>
@@ -67,6 +78,8 @@ input:focus{border-color:var(--sky);outline:none}
 </section>
 <section id="result" hidden></section>
 <section id="stats" hidden></section>
+<section id="topics" hidden></section>
+<div id="sheet"></div>
 </div>
 <script>
 const database = {
@@ -147,7 +160,7 @@ const G={'6':[()=>{const x=r(5,30),y=r(5,30),z=r(2,15),v=-x+y+z;return{topic:'Z�
 ()=>{const k=r(2,9),d=r(1,9),v=k*1000+d*100;return{topic:'Převody jednotek',q:`Převeď na metry: ${k},${d} km = ? m`,a:String(v),exp:`1 km = 1 000 m, takže ${k},${d} · 1 000 = ${v} m.`}},
 ()=>{const a=r(10,90),b=r(2,9),c=r(2,9);return{topic:'Pořadí operací',q:`Vypočítej: ${a} + ${b} · ${c}`,a:String(a+b*c),exp:`Nejdříve násobení: ${b} · ${c} = ${b*c}. Pak ${a} + ${b*c} = ${a+b*c}.`}}],'7':g7,'8':g8,'9':g9,cermat:gC.map(f=>()=>{const x=f();x.topic='Cermat – '+x.topic;return x})};
 const MODES=[['6','6. ročník','Základy a záporná čísla'],['7','7. ročník','Zlomky, procenta, poměr'],['8','8. ročník','Rovnice, Pythagoras'],['9','9. ročník','Kvadratické rovnice, goniometrie'],['cermat','🎯 Cermat zápas','Příprava na přijímačky']];
-const modeName=m=>m==='chyby'?'Opravna chyb':(MODES.find(x=>x[0]===m)||[])[1];
+const modeName=m=>m==='chyby'?'Opravna chyb':m.startsWith('t:')?'🎯 '+m.slice(2):(MODES.find(x=>x[0]===m)||[])[1];
 // ---- Kontrola odpovědi ----
 const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/[−–]/g,'-').replace(/²/g,'^2').replace(/³/g,'^3').replace(/[·*]/g,'').replace(/π/g,'pi');
 function same(u,c){u=norm(u);c=norm(c);if(u===c)return true;
@@ -159,18 +172,29 @@ const lvl=()=>Math.floor(Math.sqrt(S.xp/40))+1;
 function head(){$('streak').textContent='🔥 '+S.streak+' '+(S.streak==1?'den':S.streak>1&&S.streak<5?'dny':'dní');$('snd').textContent=S.sound?'🔊':'🔇'}
 function beep(f,d=.12){if(!S.sound)return;try{const c=beep.c=beep.c||new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d)}catch(e){}}
 function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2200)}
-function show(id){['home','game','result','stats'].forEach(s=>$(s).hidden=s!==id);clearInterval(M.timer);if(id==='game')M.timer=setInterval(tick,1000);scrollTo(0,0)}
+function show(id){['home','game','result','stats','topics'].forEach(s=>$(s).hidden=s!==id);clearInterval(M.timer);if(id==='game')M.timer=setInterval(tick,1000);scrollTo(0,0)}
 // ---- Domů ----
-function home(){const L=lvl(),lo=40*(L-1)**2,hi=40*L*L,wr=Object.keys(S.wrong).length;head();
- $('home').innerHTML=`<div class="panel"><div class="lvl"><span>Úroveň ${L} · ${TITLES[Math.min(L-1,5)]}</span><small>${S.xp} XP</small></div><div class="bar"><i style="width:${Math.round((S.xp-lo)/(hi-lo)*100)}%"></i></div></div>
-<h2>Vyber zápas</h2><div class="modes">${MODES.map(m=>`<button class="mode${m[0]==='cermat'?' cer wide':''}" data-m="${m[0]}"><em>${S.best[m[0]]!=null?'★ '+S.best[m[0]]+' %':''}</em><b>${m[1]}</b><span>${m[2]}</span></button>`).join('')}
-<button class="mode wide" data-m="chyby"><em>${wr}</em><b>🧤 Opravna chyb</b><span>${wr?'Příklady, které se ti nepovedly – zkus je znovu':'Zatím žádné chyby – skvělé!'}</span></button></div>
-<h2>Přehled</h2><button class="ghost" style="width:100%" id="st">📊 Statistiky a historie</button>`;
- $('home').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>start(b.dataset.m));$('st').onclick=stats;show('home')}
+const tot=()=>{const V=Object.values(S.topics);return{g:V.reduce((a,v)=>a+v.c,0),ms:V.reduce((a,v)=>a+v.t-v.c,0)}};
+function home(){const L=lvl(),lo=40*(L-1)**2,hi=40*L*L,wr=Object.keys(S.wrong).length,{g,ms}=tot();head();
+ $('home').innerHTML=`<div class="hero"><div class="sb"><div>${g}<small>DAN</small></div><span>:</span><div>${ms}<small>MATEMATIKA</small></div></div><div class="lvl" style="margin:16px 0 8px"><span>Úroveň ${L} · ${TITLES[Math.min(L-1,5)]}</span><small>${S.xp} XP</small></div><div class="bar"><i style="width:${Math.round((S.xp-lo)/(hi-lo)*100)}%"></i></div></div>
+<h2>Vyber zápas</h2><div class="modes">${MODES.map(m=>`<button class="mode${m[0]==='cermat'?' cer wide':''}" data-m="${m[0]}"><i class="no">${m[0]==='cermat'?'🏆':m[0]}</i><em>${S.best[m[0]]!=null?'★ '+S.best[m[0]]+' %':''}</em><b>${m[1]}</b><span>${m[2]}</span></button>`).join('')}
+<button class="mode top wide" id="tp"><i class="no">🎯</i><b>Trénink podle tématu</b><span>Vyber si slabé místo a procvičuj jen to</span></button>
+<button class="mode red wide" data-m="chyby"><i class="no">🟨</i><em>${wr}</em><b>Opravna chyb</b><span>${wr?'Příklady, které se nepovedly – zkus je znovu':'Zatím žádné chyby – skvělé!'}</span></button></div>
+<h2>Přehled</h2><button class="ghost" style="width:100%" id="st">📊 Statistiky, trofeje a přehled pro rodiče</button>`;
+ $('home').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>start(b.dataset.m));$('st').onclick=stats;$('tp').onclick=topicsView;show('home')}
+let TM;
+function topicMap(){const m={},add=(t,k,o)=>{t=t.replace('Cermat – ','');(m[t]=m[t]||{s:[],g:[]})[k].push(o)};
+ for(const k in database)database[k].forEach(x=>add(x.topic,'s',x));
+ ['6','7','8','9'].forEach(k=>G[k].forEach(f=>add(f().topic,'g',f)));return m}
+function topicsView(){TM=TM||topicMap();
+ const L=Object.keys(TM).map(t=>{const v=S.topics[t];return[t,v?Math.round(v.c/v.t*100):null]}).sort((a,b)=>(a[1]??-1)-(b[1]??-1));
+ $('topics').innerHTML=`<button class="ghost" id="b">← Domů</button><h2>Vyber téma (nejslabší nahoře)</h2><div class="modes">${L.map(t=>`<button class="mode top" data-t="${t[0]}"><b style="font-size:16px">${t[0]}</b><span>${t[1]==null?'ještě nehráno':t[1]+' % úspěšnost'}</span></button>`).join('')}</div>`;
+ $('b').onclick=home;$('topics').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>start('t:'+b.dataset.t));show('topics')}
 // ---- Zápas ----
 let M={};
 function build(mode){let L;
  if(mode==='chyby')L=Object.values(S.wrong);
+ else if(mode.startsWith('t:')){const t=TM[mode.slice(2)];L=t.s.slice();for(let i=0;i<10&&t.g.length;i++){const g=t.g[i%t.g.length]();if(!L.some(x=>x.q===g.q))L.push(g)}}
  else{L=(database[mode]||[]).slice();for(let i=0;i<8;i++){const g=G[mode][i%G[mode].length]();if(!L.some(x=>x.q===g.q))L.push(g)}}
  const w=x=>{const b=S.box[x.q];return b===undefined?1:b===0?3:b===1?1.5:.4};
  return L.map(x=>[Math.random()**(1/w(x)),x]).sort((a,b)=>b[0]-a[0]).slice(0,10).map(p=>p[1])}
@@ -178,23 +202,23 @@ function start(mode){const list=build(mode);if(!list.length){toast('Žádné chy
  M={mode,list,i:0,c:0,combo:0,max:0,xp:0,res:[],t0:Date.now()};
  $('mode').textContent=modeName(mode);show('game');load()}
 function tick(){const s=Math.floor((Date.now()-M.t0)/1000);$('clock').textContent='⏱ '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
-function prog(){$('prog').innerHTML=M.list.map((_,i)=>`<i class="${i<M.res.length?(M.res[i]?'ok':'bad'):i===M.i?'cur':''}"></i>`).join('')}
+function prog(){$('prog').innerHTML=M.list.map((_,i)=>`<i class="${i===M.i&&i>=M.res.length?'cur':''}">${i<M.res.length?(M.res[i]?'⚽':'🟨'):''}</i>`).join('')}
 function load(){const q=M.list[M.i];prog();tick();$('combo').textContent=M.combo>1?'🔥 série '+M.combo:'Otázka '+(M.i+1)+'/'+M.list.length;
  $('topic').textContent=q.topic;$('q').textContent=q.q;$('ans').value='';$('ans').disabled=false;$('fb').hidden=true;$('next').hidden=true;$('act').hidden=false;$('ans').focus()}
 function answer(skip){const q=M.list[M.i],v=$('ans').value;if(!skip&&!v.trim())return $('ans').focus();
  const ok=!skip&&same(v,q.a);$('ans').disabled=true;$('act').hidden=true;M.res.push(ok);
  const t=q.topic.replace('Cermat – ',''),T=S.topics[t]=S.topics[t]||{c:0,t:0};T.t++;
- if(ok){M.c++;M.combo++;M.max=Math.max(M.max,M.combo);const x=10+Math.min(M.combo-1,5)*2;M.xp+=x;T.c++;S.box[q.q]=Math.min((S.box[q.q]||0)+1,5);delete S.wrong[q.q];beep(660);beep(880,.15)}
+ if(ok){M.c++;M.combo++;M.max=Math.max(M.max,M.combo);S.mc=Math.max(S.mc||0,M.combo);if(M.combo===3)toast('🎩 HAT-TRICK!');if(M.combo===5)toast('🖐 Pětka v řadě!');const x=10+Math.min(M.combo-1,5)*2;M.xp+=x;T.c++;S.box[q.q]=Math.min((S.box[q.q]||0)+1,5);delete S.wrong[q.q];beep(660);beep(880,.15)}
  else{M.combo=0;S.box[q.q]=0;S.wrong[q.q]={topic:q.topic,q:q.q,a:q.a,exp:q.exp};const k=Object.keys(S.wrong);if(k.length>40)delete S.wrong[k[0]];beep(200,.25)}
  $('fb').hidden=false;$('fb').className='fb '+(ok?'ok':'no');
- $('fb').innerHTML=`<b>${ok?'⚽ GÓÓÓL! +'+(10+Math.min(M.combo-1,5)*2)+' XP':'🧤 Mimo branku. Správně: '+q.a}</b><p>${q.exp}</p>`;
+ $('fb').innerHTML=`<b>${ok?'⚽ GÓÓÓL! +'+(10+Math.min(M.combo-1,5)*2)+' XP':'🟨 Žlutá karta – mimo branku. Správně: '+q.a}</b><p>${q.exp}</p>`;
  $('next').hidden=false;$('next').textContent=M.i===M.list.length-1?'Vyhodnotit zápas 🏆':'Další akce ➔';$('next').focus();prog();save()}
 function next(){if(++M.i>=M.list.length)return end();load()}
 function end(){const n=M.list.length,pct=Math.round(M.c/n*100),sec=Math.floor((Date.now()-M.t0)/1000),before=lvl();
  const today=new Date().toLocaleDateString('sv'),y=new Date(Date.now()-864e5).toLocaleDateString('sv');
  if(S.last!==today){S.streak=S.last===y?S.streak+1:1;S.last=today}
- if(pct>=80)M.xp+=20;S.xp+=M.xp;
- if(M.mode!=='chyby'&&(S.best[M.mode]==null||pct>S.best[M.mode]))S.best[M.mode]=pct;
+ if(pct>=80)M.xp+=20;if(M.c===n&&n>=10)S.pf=(S.pf||0)+1;S.xp+=M.xp;
+ if(MODES.some(x=>x[0]===M.mode)&&(S.best[M.mode]==null||pct>S.best[M.mode]))S.best[M.mode]=pct;
  S.hist.unshift({d:today,m:M.mode,c:M.c,n,s:sec});S.hist=S.hist.slice(0,30);save();head();
  const st=pct>=90?3:pct>=70?2:pct>=40?1:0,L=lvl();
  $('result').innerHTML=`<div class="panel center"><div class="big">${'⭐'.repeat(st)||'🧤'}</div><h1 style="margin:8px 0">Konec zápasu!</h1>
@@ -204,11 +228,18 @@ function end(){const n=M.list.length,pct=Math.round(M.c/n*100),sec=Math.floor((D
 <div class="row" style="margin-top:16px"><button class="ghost" id="h">Domů</button><button class="btn" id="again">Odveta ⚽</button></div></div>`;
  $('h').onclick=home;$('again').onclick=()=>start(M.mode);show('result');if(pct>=70){beep(523);setTimeout(()=>beep(659),120);setTimeout(()=>beep(784,.25),240)}}
 // ---- Statistiky ----
-function stats(){const T=Object.entries(S.topics).map(([k,v])=>[k,Math.round(v.c/v.t*100),v.t]).sort((a,b)=>a[1]-b[1]);
- $('stats').innerHTML=`<button class="ghost" id="b">← Domů</button><h2>Témata (nejslabší nahoře)</h2><div class="panel">${T.length?T.map(t=>`<div class="t"><span>${t[0]}</span><div class="bar ${t[1]<60?'w':''}"><i style="width:${t[1]}%"></i></div><b>${t[1]} %</b></div>`).join(''):'<span class="note">Odehraj první zápas a tady se objeví tvé výsledky.</span>'}</div>
-<h2>Poslední zápasy</h2><div class="panel">${S.hist.slice(0,10).map(h=>`<div class="h"><span>${modeName(h.m)} – ${h.c}/${h.n}</span><span>${h.d.slice(8)}. ${h.d.slice(5,7)}.</span></div>`).join('')||'<span class="note">Zatím nic.</span>'}</div>
+function report(){const w=Date.now()-7*864e5,H=S.hist.filter(x=>new Date(x.d)>=w),n=H.reduce((a,x)=>a+x.n,0),c=H.reduce((a,x)=>a+x.c,0),s=H.reduce((a,x)=>a+x.s,0);
+ const T=Object.entries(S.topics).filter(x=>x[1].t>=3).map(([k,v])=>[k,Math.round(v.c/v.t*100)]).sort((a,b)=>a[1]-b[1]),f=a=>a.map(x=>x[0]+' ('+x[1]+' %)').join(', ');
+ return `<p><b>Posledních 7 dní:</b> ${H.length} zápasů, úspěšnost ${n?Math.round(c/n*100):0} %, ${Math.round(s/60)} min tréninku. Denní série: ${S.streak}.</p><p><b>Doporučeno procvičit:</b> ${f(T.filter(x=>x[1]<70).slice(0,3))||'zatím nic zásadního'}.</p><p><b>Silné stránky:</b> ${f(T.filter(x=>x[1]>=80).slice(-3).reverse())||'zatím málo dat'}.</p>`}
+function stats(){const T=Object.entries(S.topics).map(([k,v])=>[k,Math.round(v.c/v.t*100)]).sort((a,b)=>a[1]-b[1]),{g}=tot();
+ const B=[['🎩','Hattrick','3 správně za sebou',(S.mc||0)>=3],['🖐','Pětka','5 správně za sebou',(S.mc||0)>=5],['🧤','Čisté konto','10 z 10 v zápase',(S.pf||0)>=1],['📅','Týden v kuse','7 dní trénink',S.streak>=7],['⚽','Stovka gólů','100 správných',g>=100],['🏆','Cermat 80 %','zápas na 80 %+',(S.best.cermat||0)>=80],['🎯','Všestranný','zahraj všech 5 zápasů',MODES.every(m=>S.best[m[0]]!=null)]];
+ $('stats').innerHTML=`<button class="ghost" id="b">← Domů</button><h2>Trofeje</h2><div class="badges">${B.map(x=>`<div class="bd${x[3]?'':' off'}">${x[0]} <b>${x[1]}</b>${x[2]}</div>`).join('')}</div>
+<h2>Přehled pro rodiče</h2><div class="panel rep">${report()}<button class="ghost" id="pr" style="width:100%;margin-top:8px">🖨 Vytisknout / uložit jako PDF</button></div>
+<h2>Témata (nejslabší nahoře)</h2><div class="panel">${T.length?T.map(t=>`<div class="t"><span>${t[0]}</span><div class="bar ${t[1]<60?'w':''}"><i style="width:${t[1]}%"></i></div><b>${t[1]} %</b></div>`).join(''):'<span class="note">Odehraj první zápas a tady se objeví výsledky.</span>'}</div>
+<h2>Poslední zápasy</h2><div class="panel">${S.hist.slice(0,10).map(x=>`<div class="h"><span>${modeName(x.m)} – ${x.c}/${x.n}</span><span>${x.d.slice(8)}. ${x.d.slice(5,7)}.</span></div>`).join('')||'<span class="note">Zatím nic.</span>'}</div>
 <button class="ghost" id="rs" style="width:100%;margin-top:6px;color:var(--bad)">Smazat veškerý postup</button>`;
- $('b').onclick=home;$('rs').onclick=()=>{if(confirm('Opravdu smazat XP, statistiky i chyby?')){localStorage.removeItem(LS);location.reload()}};show('stats')}
+ $('b').onclick=home;$('pr').onclick=()=>{const L=lvl();$('sheet').innerHTML=`<h1>⚽ Zápisek z trenérské lavičky</h1><p style="text-align:center;font-size:20px">Dan · úroveň ${L} – ${TITLES[Math.min(L-1,5)]}</p><p style="text-align:center">Celkem ${g} gólů z ${g+tot().ms} pokusů · ${new Date().toLocaleDateString('cs-CZ')}</p>${report()}<table>${T.map(t=>`<tr><td>${t[0]}</td><td align="right">${t[1]} %</td></tr>`).join('')}</table>`;print()};
+ $('rs').onclick=()=>{if(confirm('Opravdu smazat XP, statistiky i chyby?')){localStorage.removeItem(LS);location.reload()}};show('stats')}
 // ---- Ovládání ----
 $('go').onclick=()=>answer();$('skip').onclick=()=>answer(true);$('next').onclick=next;$('quit').onclick=()=>{if(confirm('Opustit zápas? Průběh se nepočítá.'))home()};
 $('snd').onclick=()=>{S.sound=S.sound?0:1;save();head()};
