@@ -57,6 +57,8 @@ input:focus{border-color:var(--sky);outline:none}
 .rep p{margin:6px 0}.rep{font-size:15px}
 #sheet{display:none}
 @media print{body{background:#fff!important;color:#111}#app>*:not(#sheet){display:none!important}#sheet{display:block;font-family:Georgia,serif;border:6px double #166534;padding:28px;color:#111}#sheet h1{text-align:center;color:#166534}#sheet table{width:100%;border-collapse:collapse;margin-top:12px}#sheet td{border-bottom:1px solid #ccc;padding:4px}}
+.opt{text-align:left;padding:14px;font-size:17px}.opt:hover{border-color:var(--pitch)}.rv{border-bottom:1px solid var(--line);padding:8px 0;font-size:14px}.rv i{font-style:normal;color:var(--bad)}
+#pcv{width:100%;height:230px;background:var(--card2);border:1px solid var(--line);border-radius:12px;touch-action:none;display:block;margin-bottom:8px;background-image:repeating-linear-gradient(transparent 0 27px,#ffffff10 27px 28px)}
 </style>
 </head>
 <body>
@@ -71,6 +73,10 @@ input:focus{border-color:var(--sky);outline:none}
 <div class="q" id="q"></div>
 <p class="note">✏️ Počítej na papír, do políčka napiš jen výsledek. Zlomky jako 3/4, desetinná čísla s čárkou.</p>
 <input id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Tvůj výsledek…" aria-label="Odpověď">
+<button class="ghost" id="ptog" style="margin:0 0 12px">✏️ Papír na počítání</button>
+<div id="ppad" hidden><canvas id="pcv"></canvas><div class="row" style="margin-bottom:12px"><button class="ghost" id="pers">🧽 Guma</button><button class="ghost" id="pclr">🗑 Smazat</button></div></div>
+<div class="row" id="keys" style="margin:-4px 0 12px"><button class="ghost" data-k="-">−</button><button class="ghost" data-k="/">/</button><button class="ghost" data-k=",">,</button><button class="ghost" data-k="x">x</button><button class="ghost" data-k="²">²</button></div>
+<div id="opts" hidden style="display:grid;gap:10px;margin-bottom:12px"></div>
 <div class="row" id="act"><button class="ghost" id="skip">Nevím</button><button class="btn" id="go">Vystřelit! ⚽</button></div>
 <div id="fb" hidden></div>
 <button class="btn sec" id="next" style="margin-top:14px" hidden>Další akce ➔</button>
@@ -156,28 +162,67 @@ const g9=[()=>{const a=r(2,5),b=r(2,3),c=pick([16,25,36,49,64,81,100,121,144]),v
 ()=>{let p,q;do{p=r(-6,3);q=p+r(1,6)}while(!p||!q||p+q===0);const B=-(p+q),C=p*q;return{topic:'Kvadratické rovnice',q:`Napiš menší kořen rovnice x² ${sg(B)}x ${sg(C)} = 0`,a:String(p),exp:`Rozklad: (x ${sg(-p)})(x ${sg(-q)}) = 0. Kořeny jsou ${p} a ${q}, menší je ${p}.`}},
 ()=>{const a=r(2,9),b=r(2,9),c=r(2,9);return{topic:'Objem těles',q:`Kvádr má hrany ${a} cm, ${b} cm a ${c} cm. Jaký je objem v cm³?`,a:String(a*b*c),exp:`V = a · b · c = ${a} · ${b} · ${c} = ${a*b*c} cm³.`}}];
 const gC=[()=>{const v=r(3,10)*10,t=pick([1.5,2.5,3.5]),d=v*t;return{topic:'Rychlost',q:`Vlak ujel ${d} km za ${String(t).replace('.',',')} h. Jaká byla průměrná rychlost v km/h?`,a:String(v),exp:`v = s : t = ${d} : ${t} = ${v} km/h.`}},g7[0],g8[0],g9[1]];
+const sh=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(p=>p[1]);
+const mc=(topic,q,right,wrong,exp)=>{const o=sh([right,...wrong]);return{topic,q,o,a:'ABCDE'[o.indexOf(right)],exp}},yn=(topic,q,t,exp)=>({topic,q,o:['ANO','NE'],a:t?'ANO':'NE',exp});
+const hr=n=>n>=5?'hráčů':'hráči',D=v=>String(+v.toFixed(4)).replace('.',',');
+g7.push(()=>{const a=r(1,6)*20,p=pick([10,20,25,50]),b=a*(100+p)/100;return{topic:'Procenta',q:`Dan dal loni ${a} gólů, letos ${b}. O kolik procent jich dal víc?`,a:String(p),exp:`Rozdíl ${b-a} gólů dělíme původním počtem: ${b-a} : ${a} = ${p/100} = ${p} %.`}},
+()=>{const w=r(3,12),d=r(0,6),l=r(0,6);return{topic:'Tabulka a body',q:`Tým má ${w} výher, ${d} remíz a ${l} proher. Za výhru jsou 3 body, za remízu 1, za prohru 0. Kolik má bodů?`,a:String(3*w+d),exp:`3 · ${w} + ${d} = ${3*w+d} bodů.`}},
+()=>{const b=pick([4,5,6,8]),a=r(1,b-1),k=r(2,6),n=b*k;return{topic:'Zlomky a celky',q:`Na turnaji je ${n} dětí. Fotbal hraje ${a}/${b} z nich. Kolik dětí fotbal nehraje?`,a:String(n-a*k),exp:`${n} : ${b} = ${k}, fotbal hraje ${a} · ${k} = ${a*k}. Nehraje ${n} − ${a*k} = ${n-a*k}.`}});
+g8.push(()=>{const m=r(2,10)*50,d=r(1,10)*50,k=m+d;return{topic:'Soustava a slovní úloha',q:`Míč a kopačky stojí dohromady ${m+k} Kč. Kopačky jsou o ${d} Kč dražší než míč. Kolik stojí míč?`,a:String(m),exp:`Kdyby byly stejně drahé, platilo by se ${m+k} − ${d} = ${m+k-d} Kč za dva míče. Míč: ${m+k-d} : 2 = ${m} Kč.`}},
+()=>{const R=pick([5,10,15,25,50]),o=+(6.28*R).toFixed(2);return{topic:'Obvod kruhu',q:`Obvod kruhu s poloměrem ${R} cm (π = 3,14) v cm:`,a:String(o),exp:`o = 2 · π · r = 2 · 3,14 · ${R} = ${D(o)} cm.`}},
+()=>{const v=sh([r(1,20),r(21,40),r(41,60),r(61,80),r(81,99)]),m=[...v].sort((x,y)=>x-y)[2];return{topic:'Statistika',q:`Najdi medián (prostřední hodnotu) čísel: ${v.join(', ')}`,a:String(m),exp:`Seřadíme: ${[...v].sort((x,y)=>x-y).join(', ')}. Uprostřed je ${m}.`}});
+g9.push(()=>{const s=pick([24,30,36,48,60]),t=pick([10,15,20,30,45,60]),d=s*t/60,v1=s/2-r(1,4)*2;return{topic:'Pohyb a rychlost',q:`Dva cyklisté vyjedou proti sobě ze vzdálenosti ${d} km rychlostmi ${v1} km/h a ${s-v1} km/h. Za kolik minut se potkají?`,a:String(t),exp:`Sbližují se rychlostí ${v1} + ${s-v1} = ${s} km/h. Čas: ${d} : ${s} h = ${t} minut.`}},
+()=>{const n=r(5,12);return{topic:'Kombinatorika',q:`Kolika způsoby lze z ${n} hráčů vybrat dvojici (na pořadí nezáleží)?`,a:String(n*(n-1)/2),exp:`Každý se spojí s ${n-1} dalšími, ale dvojice se počítá dvakrát: ${n} · ${n-1} : 2 = ${n*(n-1)/2}.`}},
+()=>{const k=pick([10000,25000,50000,100000]),m=r(2,12),km=m*k/100000;return{topic:'Měřítko mapy',q:`Na mapě v měřítku 1 : ${k} je vzdálenost ${m} cm. Kolik km je to ve skutečnosti?`,a:String(+km.toFixed(3)),exp:`${m} · ${k} = ${m*k} cm = ${D(km)} km.`}},
+()=>{const m=r(2,12),e=r(1,2),a=3*m-4+e;return{topic:'Nerovnice',q:`Najdi nejmenší celé číslo x, pro které platí 3x − 4 > ${a}`,a:String(m+1),exp:`3x > ${a+4}, x > ${D((a+4)/3)}. Nejmenší celé číslo je ${m+1}.`}},
+()=>{const p=r(2,10)*100;return{topic:'Procenta',q:`Zboží za ${p} Kč zlevnili nejdřív o 20 %, pak o dalších 25 %. Kolik stojí nakonec?`,a:String(p*.6),exp:`${p} · 0,8 = ${p*.8}; ${p*.8} · 0,75 = ${p*.6} Kč.`}},
+()=>{const a=r(2,9),d=r(2,7),n=r(15,30);return{topic:'Posloupnosti',q:`Aritmetická posloupnost začíná ${a}, ${a+d}, ${a+2*d}, … Jaký je její ${n}. člen?`,a:String(a+(n-1)*d),exp:`${n}. člen = ${a} + ${n-1} · ${d} = ${a+(n-1)*d}.`}},
+()=>{const b=r(1,5),f=b+r(3,10),h=b+r(2,8),n=f+h-b+r(1,6);return{topic:'Množiny (Vennův diagram)',q:`V oddíle je ${n} dětí. Fotbal hraje ${f}, hokej ${h} a oba sporty ${b}. Kolik dětí nehraje ani jeden?`,a:String(n-(f+h-b)),exp:`Aspoň jeden sport hraje ${f} + ${h} − ${b} = ${f+h-b} dětí. Ostatní: ${n} − ${f+h-b} = ${n-(f+h-b)}.`}});
+gC.push(g7[3],g7[4],g8[3],g8[5],g9[3],g9[4],g9[5],g9[6],g9[7],g9[8],g9[9],()=>mc('Zlomky','Který zlomek je největší?','7/8',['2/3','3/4','5/7'],'Společný jmenovatel 168: 7/8 = 147/168, 2/3 = 112/168, 3/4 = 126/168, 5/7 = 120/168.'));
+database.cermat.push(mc('Cermat – Geometrie','Kolik stupňů má vnitřní úhel pravidelného šestiúhelníku?','120°',['60°','108°','135°','150°'],'Součet úhlů šestiúhelníku je 4 · 180° = 720°, jeden úhel 720 : 6 = 120°.'),
+mc('Cermat – Výrazy','Který výraz je roven (x + 3)²?','x² + 6x + 9',['x² + 9','x² + 3x + 9','x² + 6x + 6'],'Vzorec (a + b)² = a² + 2ab + b².'),
+mc('Cermat – Statistika','Medián čísel 2, 9, 4, 7, 4 je:','4',['5','6','9'],'Seřazeno 2, 4, 4, 7, 9 – uprostřed je 4.'),
+yn('Cermat – Dělitelnost','Číslo 2 187 je dělitelné třemi.',true,'Ciferný součet 2+1+8+7 = 18 je dělitelný třemi.'),
+yn('Cermat – Procenta','Zdražíme-li o 10 % a pak zlevníme o 10 %, vrátíme se na původní cenu.',false,'Např. 100 → 110 → 99. Sleva se počítá z vyšší ceny.'));
 const G={'6':[()=>{const x=r(5,30),y=r(5,30),z=r(2,15),v=-x+y+z;return{topic:'Záporná čísla',q:`Vypočítej: -${x} + ${y} - (-${z})`,a:String(v),exp:`-(-${z}) = +${z}. Tedy -${x} + ${y} + ${z} = ${v}.`}},
 ()=>{const k=r(2,9),d=r(1,9),v=k*1000+d*100;return{topic:'Převody jednotek',q:`Převeď na metry: ${k},${d} km = ? m`,a:String(v),exp:`1 km = 1 000 m, takže ${k},${d} · 1 000 = ${v} m.`}},
 ()=>{const a=r(10,90),b=r(2,9),c=r(2,9);return{topic:'Pořadí operací',q:`Vypočítej: ${a} + ${b} · ${c}`,a:String(a+b*c),exp:`Nejdříve násobení: ${b} · ${c} = ${b*c}. Pak ${a} + ${b*c} = ${a+b*c}.`}}],'7':g7,'8':g8,'9':g9,cermat:gC.map(f=>()=>{const x=f();x.topic='Cermat – '+x.topic;return x})};
-const MODES=[['6','6. ročník','Základy a záporná čísla'],['7','7. ročník','Zlomky, procenta, poměr'],['8','8. ročník','Rovnice, Pythagoras'],['9','9. ročník','Kvadratické rovnice, goniometrie'],['cermat','🎯 Cermat zápas','Příprava na přijímačky']];
+G['6'].push(()=>{const [a,b]=pick([[1,2],[2,3],[3,4],[3,5],[4,5],[5,6],[2,5],[3,7],[5,8]]),m=r(2,9);return{topic:'Zlomky',q:`Zkrať zlomek ${a*m}/${b*m} na základní tvar (piš jako a/b)`,a:a+'/'+b,exp:`Obě čísla vydělíme ${m}: ${a*m} : ${m} = ${a} a ${b*m} : ${m} = ${b}.`}},
+()=>{const s=r(3,25);return{topic:'Geometrie',q:`Obvod čtverce je ${4*s} cm. Jaká je délka jedné strany v cm?`,a:String(s),exp:`Čtverec má 4 stejné strany: ${4*s} : 4 = ${s} cm.`}},
+()=>{const x=r(30,85),y=r(30,85);return{topic:'Úhly',q:`Dva úhly v trojúhelníku mají ${x}° a ${y}°. Kolik stupňů má třetí?`,a:String(180-x-y),exp:`180 − ${x} − ${y} = ${180-x-y}°.`}},
+()=>{const v=r(4,15)*10,t=r(2,6);return{topic:'Slovní úloha',q:`Autobus ujel ${v*t} km za ${t} h. Jakou jel průměrnou rychlostí v km/h?`,a:String(v),exp:`v = s : t = ${v*t} : ${t} = ${v} km/h.`}},
+()=>{const b=pick([3,4,5,6,8]),a=r(1,b-1),k=r(2,9);return{topic:'Zlomky a celky',q:`Kolik je ${a}/${b} z ${b*k}?`,a:String(a*k),exp:`${b*k} : ${b} = ${k}, a ${a} · ${k} = ${a*k}.`}});
+g7.push(()=>{let a,b,c,d,n,e;do{a=r(1,3);b=pick([2,3,4,6]);c=r(1,3);d=pick([2,3,4,6]);n=a*d+c*b;e=b*d}while(n%e===0);const g=gcd(n,e);return{topic:'Zlomky',q:`Vypočítej: ${a}/${b} + ${c}/${d} (zapiš jako a/b, nejlépe zkráceně)`,a:n/g+'/'+e/g,exp:`Společný jmenovatel ${e}: ${a*d}/${e} + ${c*b}/${e} = ${n}/${e} = ${n/g}/${e/g}.`}},
+()=>{const a=r(2,9),b=r(2,9),c=r(1,30);return{topic:'Záporná čísla',q:`Vypočítej: (-${a}) · ${b} + ${c}`,a:String(c-a*b),exp:`(-${a}) · ${b} = ${-a*b}; ${-a*b} + ${c} = ${c-a*b}.`}},
+()=>{const x=r(-5,9),a=r(2,9),b=r(1,12);return{topic:'Výrazy',q:`Vypočítej hodnotu výrazu pro x = ${x}: ${a}x - ${b}`,a:String(a*x-b),exp:`Dosadíme: ${a} · (${x}) − ${b} = ${a*x} − ${b} = ${a*x-b}.`}},
+()=>{const k=r(2,6),c=r(3,9)*10,p=pick([2,4,5,8]);return{topic:'Slovní úloha',q:`Za ${k} kg jablek zaplatil Dan ${k*c} Kč. Kolik zaplatí za ${p} kg?`,a:String(p*c),exp:`1 kg stojí ${k*c} : ${k} = ${c} Kč. Za ${p} kg: ${p} · ${c} = ${p*c} Kč.`}});
+g8.push(()=>{const a=r(2,6),c=r(2,9),b=r(1,9);return{topic:'Rovnice se zlomkem',q:`Vyřeš rovnici: (x + ${b}) / ${a} = ${c}`,a:String(a*c-b),exp:`Vynásobíme ${a}: x + ${b} = ${a*c}, tedy x = ${a*c-b}.`}},
+()=>{const a=r(2,7),b=r(1,9),k=r(2,9);return{topic:'Závorky',q:`Vyřeš rovnici: ${a}(x - ${b}) = ${a*k}`,a:String(k+b),exp:`x − ${b} = ${a*k} : ${a} = ${k}, tedy x = ${k+b}.`}});
+g9.push(()=>{const k=r(2,5),q=pick([-9,-7,-5,-4,-3,-2,2,3,4,6,8]);return{topic:'Lineární funkce',q:`Urči y-ovou souřadnici průsečíku přímky y = ${k}x ${sg(q)} s osou y.`,a:String(q),exp:`Na ose y je x = 0, takže y = ${q}.`}},
+()=>{const a=pick([-7,-5,-3,-2,2,3,5,8]);return{topic:'Lomené výrazy',q:`Pro jaké x není výraz 5 / (x ${sg(-a)}) definován?`,a:String(a),exp:`Jmenovatel nesmí být 0: x ${sg(-a)} = 0, tedy x = ${a}.`}},
+()=>{const a=r(2,9);return{topic:'Objem těles',q:`Jaký je objem krychle o hraně ${a} cm v cm³?`,a:String(a**3),exp:`V = a³ = ${a} · ${a} · ${a} = ${a**3} cm³.`}});
+const MODES=[['6','6. ročník','Základy a záporná čísla'],['7','7. ročník','Zlomky, procenta, poměr'],['8','8. ročník','Rovnice, Pythagoras'],['9','9. ročník','Kvadratické rovnice, goniometrie'],['cermat','🎯 Cermat zápas','Příprava na přijímačky'],['exam','🏁 Generálka','Jako ostrá zkouška: 16 úloh, 50 min, výsledky až na konci'],['dnes','⚡ Dnešní trénink','Mix podle tvých slabých míst – začni tady']];
+const BASE=MODES.filter(m=>!['exam','dnes'].includes(m[0])),W={cermat:' cer wide',exam:' cer wide',dnes:' top wide'},IC={cermat:'🏆',exam:'🏁',dnes:'⚡'};
 const modeName=m=>m==='chyby'?'Opravna chyb':m.startsWith('t:')?'🎯 '+m.slice(2):(MODES.find(x=>x[0]===m)||[])[1];
 // ---- Kontrola odpovědi ----
-const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/[−–]/g,'-').replace(/²/g,'^2').replace(/³/g,'^3').replace(/[·*]/g,'').replace(/π/g,'pi');
-function same(u,c){u=norm(u);c=norm(c);if(u===c)return true;
- const N=/^[-+]?\d+(\.\d+)?$/;if(N.test(u)&&N.test(c))return Number(u)===Number(c);
- const F=/^(-?\d+)\/(\d+)$/,fu=u.match(F),fc=c.match(F);
- if(fu&&fc&&+fu[2]&&gcd(+fu[1],+fu[2])===1)return fu[1]*fc[2]===fc[1]*fu[2];return false}
+const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/[−–]/g,'-').replace(/²/g,'^2').replace(/³/g,'^3').replace(/[·*]/g,'').replace(/π/g,'pi').replace(/^[a-z]=/,'').replace(/(kč|km\/h|km|cm\^?[23]?|m\^?[23]?|min|hod|kg|l|%|°)+$/,'');
+const F=/^(-?\d+)\/(\d+)$/,N=/^[-+]?\d+(\.\d+)?$/,num=s=>N.test(s)?+s:F.test(s)?(m=>m[1]/m[2])(s.match(F)):NaN;
+const ev=(s,x)=>{s=s.replace(/\^/g,'**').replace(/(\d|\))(?=x|\()/g,'$1*').replace(/x(?=\d|\(|x)/g,'x*').replace(/\)(?=\d)/g,')*');if(!/^[\dx+\-*/().]+$/.test(s))return NaN;try{return Function('x','return '+s)(x)}catch(e){return NaN}};
+// Uznává 0,75 místo 3/4, jednotky, "x=6" i jiný tvar výrazu (5+7x místo 7x+5); nezkrácený zlomek ne.
+function same(u,c){u=norm(u);c=norm(c);if(u===c)return true;const a=num(u),b=num(c);
+ if(!isNaN(a)&&!isNaN(b)){const f=u.match(F);return Math.abs(a-b)<1e-9&&(!f||gcd(+f[1],+f[2])===1)}
+ if(/x/.test(c))return[2,3,-1.5].every(t=>{const p=ev(u,t),q=ev(c,t);return isFinite(p)&&Math.abs(p-q)<1e-9});return false}
 // ---- Hráč, úroveň, série ----
 const lvl=()=>Math.floor(Math.sqrt(S.xp/40))+1;
 function head(){$('streak').textContent='🔥 '+S.streak+' '+(S.streak==1?'den':S.streak>1&&S.streak<5?'dny':'dní');$('snd').textContent=S.sound?'🔊':'🔇'}
-function beep(f,d=.12){if(!S.sound)return;try{const c=beep.c=beep.c||new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d)}catch(e){}}
+function beep(f,d=.12){if(!S.sound||M.exam)return;try{const c=beep.c=beep.c||new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d)}catch(e){}}
 function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2200)}
 function show(id){['home','game','result','stats','topics'].forEach(s=>$(s).hidden=s!==id);clearInterval(M.timer);if(id==='game')M.timer=setInterval(tick,1000);scrollTo(0,0)}
 // ---- Domů ----
 const tot=()=>{const V=Object.values(S.topics);return{g:V.reduce((a,v)=>a+v.c,0),ms:V.reduce((a,v)=>a+v.t-v.c,0)}};
 function home(){const L=lvl(),lo=40*(L-1)**2,hi=40*L*L,wr=Object.keys(S.wrong).length,{g,ms}=tot();head();
  $('home').innerHTML=`<div class="hero"><div class="sb"><div>${g}<small>DAN</small></div><span>:</span><div>${ms}<small>MATEMATIKA</small></div></div><div class="lvl" style="margin:16px 0 8px"><span>Úroveň ${L} · ${TITLES[Math.min(L-1,5)]}</span><small>${S.xp} XP</small></div><div class="bar"><i style="width:${Math.round((S.xp-lo)/(hi-lo)*100)}%"></i></div></div>
-<h2>Vyber zápas</h2><div class="modes">${MODES.map(m=>`<button class="mode${m[0]==='cermat'?' cer wide':''}" data-m="${m[0]}"><i class="no">${m[0]==='cermat'?'🏆':m[0]}</i><em>${S.best[m[0]]!=null?'★ '+S.best[m[0]]+' %':''}</em><b>${m[1]}</b><span>${m[2]}</span></button>`).join('')}
+<h2>Vyber zápas</h2><div class="modes">${[MODES[6],...BASE,MODES[5]].map(m=>`<button class="mode${W[m[0]]||''}" data-m="${m[0]}"><i class="no">${IC[m[0]]||m[0]}</i><em>${S.best[m[0]]!=null?'★ '+S.best[m[0]]+' %':''}</em><b>${m[1]}</b><span>${m[2]}</span></button>`).join('')}
 <button class="mode top wide" id="tp"><i class="no">🎯</i><b>Trénink podle tématu</b><span>Vyber si slabé místo a procvičuj jen to</span></button>
 <button class="mode red wide" data-m="chyby"><i class="no">🟨</i><em>${wr}</em><b>Opravna chyb</b><span>${wr?'Příklady, které se nepovedly – zkus je znovu':'Zatím žádné chyby – skvělé!'}</span></button></div>
 <h2>Přehled</h2><button class="ghost" style="width:100%" id="st">📊 Statistiky, trofeje a přehled pro rodiče</button>`;
@@ -194,24 +239,29 @@ function topicsView(){TM=TM||topicMap();
 let M={};
 function build(mode){let L;
  if(mode==='chyby')L=Object.values(S.wrong);
+ else if(mode==='dnes'){TM=TM||topicMap();L=[];Object.values(TM).forEach(t=>t.g.forEach(f=>{L.push(f(),f())}));L.push(...Object.values(S.wrong).slice(0,4))}
+ else if(mode==='exam'){L=database.cermat.slice();for(let i=0;i<40;i++)L.push(G.cermat[i%G.cermat.length]())}
  else if(mode.startsWith('t:')){const t=TM[mode.slice(2)];L=t.s.slice();for(let i=0;i<10&&t.g.length;i++){const g=t.g[i%t.g.length]();if(!L.some(x=>x.q===g.q))L.push(g)}}
- else{L=(database[mode]||[]).slice();for(let i=0;i<8;i++){const g=G[mode][i%G[mode].length]();if(!L.some(x=>x.q===g.q))L.push(g)}}
- const w=x=>{const b=S.box[x.q];return b===undefined?1:b===0?3:b===1?1.5:.4};
- return L.map(x=>[Math.random()**(1/w(x)),x]).sort((a,b)=>b[0]-a[0]).slice(0,10).map(p=>p[1])}
+ else{L=(database[mode]||[]).slice();for(let i=0;i<20;i++){const g=G[mode][i%G[mode].length]();if(!L.some(x=>x.q===g.q))L.push(g)}}
+ const sn=x=>(S.seen||[]).includes(x.q)?.04:1,w=x=>{if(mode==='exam')return sn(x);const t=S.topics[x.topic.replace('Cermat – ','')],b=S.box[x.q];return sn(x)*(t&&t.t>=2?1+2*(1-t.c/t.t):1.5)*(b===undefined?1:b===0?3:b===1?1.5:.4)};
+ return L.map(x=>[Math.random()**(1/w(x)),x]).sort((a,b)=>b[0]-a[0]).filter((x,i,A)=>A.findIndex(y=>y[1].q===x[1].q)===i).slice(0,mode==='exam'?16:10).map(p=>p[1])}
 function start(mode){const list=build(mode);if(!list.length){toast('Žádné chyby k opravě 👍');return}
- M={mode,list,i:0,c:0,combo:0,max:0,xp:0,res:[],t0:Date.now()};
+ TM=TM||topicMap();M={mode,list,i:0,c:0,combo:0,max:0,xp:0,res:[],us:[],rt:0,exam:mode==='exam',t0:Date.now()};
  $('mode').textContent=modeName(mode);show('game');load()}
-function tick(){const s=Math.floor((Date.now()-M.t0)/1000);$('clock').textContent='⏱ '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
-function prog(){$('prog').innerHTML=M.list.map((_,i)=>`<i class="${i===M.i&&i>=M.res.length?'cur':''}">${i<M.res.length?(M.res[i]?'⚽':'🟨'):''}</i>`).join('')}
-function load(){const q=M.list[M.i];prog();tick();$('combo').textContent=M.combo>1?'🔥 série '+M.combo:'Otázka '+(M.i+1)+'/'+M.list.length;
- $('topic').textContent=q.topic;$('q').textContent=q.q;$('ans').value='';$('ans').disabled=false;$('fb').hidden=true;$('next').hidden=true;$('act').hidden=false;$('ans').focus()}
-function answer(skip){const q=M.list[M.i],v=$('ans').value;if(!skip&&!v.trim())return $('ans').focus();
- const ok=!skip&&same(v,q.a);$('ans').disabled=true;$('act').hidden=true;M.res.push(ok);
+function tick(){const s=Math.floor((Date.now()-M.t0)/1000),f=x=>Math.floor(x/60)+':'+String(x%60).padStart(2,'0');if(M.exam){$('clock').textContent='⏳ '+f(Math.max(0,3000-s));if(s>=3000)end()}else $('clock').textContent='⏱ '+f(s)}
+function prog(){$('prog').innerHTML=M.list.map((_,i)=>`<i class="${i===M.i&&i>=M.res.length?'cur':''}">${i<M.res.length?(M.exam?'•':M.res[i]?'⚽':'🟨'):''}</i>`).join('')}
+function load(){const q=M.list[M.i];prog();tick();$('combo').textContent=M.combo>1&&!M.exam?'🔥 série '+M.combo:'Otázka '+(M.i+1)+'/'+M.list.length;
+ $('topic').textContent=q.topic;$('q').textContent=q.q;pClr();$('ans').value='';$('ans').disabled=false;$('fb').hidden=true;$('next').hidden=true;const O=!!q.o;$('ans').hidden=$('keys').hidden=$('act').hidden=O;$('opts').hidden=!O;
+ if(O)$('opts').innerHTML=q.o.map((t,i)=>{const y=t==='ANO'||t==='NE';return`<button class="ghost opt" data-v="${y?t:'ABCDE'[i]}">${y?'':'ABCDE'[i]+') '}${t}</button>`}).join('');else $('ans').focus()}
+function answer(skip,val){const q=M.list[M.i],v=val!==undefined?val:$('ans').value;M.us[M.i]=skip?'—':v;S.seen=[...(S.seen||[]),q.q].slice(-120);if(!skip&&!v.trim())return $('ans').focus();
+ const ok=!skip&&same(v,q.a);$('ans').disabled=true;$('act').hidden=true;$('opts').hidden=true;M.res.push(ok);
  const t=q.topic.replace('Cermat – ',''),T=S.topics[t]=S.topics[t]||{c:0,t:0};T.t++;
- if(ok){M.c++;M.combo++;M.max=Math.max(M.max,M.combo);S.mc=Math.max(S.mc||0,M.combo);if(M.combo===3)toast('🎩 HAT-TRICK!');if(M.combo===5)toast('🖐 Pětka v řadě!');const x=10+Math.min(M.combo-1,5)*2;M.xp+=x;T.c++;S.box[q.q]=Math.min((S.box[q.q]||0)+1,5);delete S.wrong[q.q];beep(660);beep(880,.15)}
- else{M.combo=0;S.box[q.q]=0;S.wrong[q.q]={topic:q.topic,q:q.q,a:q.a,exp:q.exp};const k=Object.keys(S.wrong);if(k.length>40)delete S.wrong[k[0]];beep(200,.25)}
+ if(ok){M.c++;M.combo++;M.max=Math.max(M.max,M.combo);S.mc=Math.max(S.mc||0,M.combo);if(!M.exam&&M.combo===3)toast('🎩 HAT-TRICK!');if(!M.exam&&M.combo===5)toast('🖐 Pětka v řadě!');const x=10+Math.min(M.combo-1,5)*2;M.xp+=x;T.c++;S.box[q.q]=Math.min((S.box[q.q]||0)+1,5);delete S.wrong[q.q];beep(660);beep(880,.15)}
+ else{M.combo=0;S.box[q.q]=0;S.wrong[q.q]={topic:q.topic,q:q.q,a:q.a,exp:q.exp,o:q.o};if(!M.exam&&M.rt<3){const t=TM[q.topic.replace('Cermat – ','')];if(t&&t.g.length){M.list.splice(M.i+3,0,pick(t.g)());M.rt++}}const k=Object.keys(S.wrong);if(k.length>40)delete S.wrong[k[0]];beep(200,.25)}
+ if(M.exam){prog();save();return next()}
+ const cor=q.o&&q.o.length>2?q.a+') '+q.o['ABCDE'.indexOf(q.a)]:q.a;
  $('fb').hidden=false;$('fb').className='fb '+(ok?'ok':'no');
- $('fb').innerHTML=`<b>${ok?'⚽ GÓÓÓL! +'+(10+Math.min(M.combo-1,5)*2)+' XP':'🟨 Žlutá karta – mimo branku. Správně: '+q.a}</b><p>${q.exp}</p>`;
+ $('fb').innerHTML=`<b>${ok?'⚽ GÓÓÓL! +'+(10+Math.min(M.combo-1,5)*2)+' XP':'🟨 Žlutá karta – mimo branku. Správně: '+cor}</b><p>${q.exp}</p>`;
  $('next').hidden=false;$('next').textContent=M.i===M.list.length-1?'Vyhodnotit zápas 🏆':'Další akce ➔';$('next').focus();prog();save()}
 function next(){if(++M.i>=M.list.length)return end();load()}
 function end(){const n=M.list.length,pct=Math.round(M.c/n*100),sec=Math.floor((Date.now()-M.t0)/1000),before=lvl();
@@ -220,19 +270,19 @@ function end(){const n=M.list.length,pct=Math.round(M.c/n*100),sec=Math.floor((D
  if(pct>=80)M.xp+=20;if(M.c===n&&n>=10)S.pf=(S.pf||0)+1;S.xp+=M.xp;
  if(MODES.some(x=>x[0]===M.mode)&&(S.best[M.mode]==null||pct>S.best[M.mode]))S.best[M.mode]=pct;
  S.hist.unshift({d:today,m:M.mode,c:M.c,n,s:sec});S.hist=S.hist.slice(0,30);save();head();
- const st=pct>=90?3:pct>=70?2:pct>=40?1:0,L=lvl();
- $('result').innerHTML=`<div class="panel center"><div class="big">${'⭐'.repeat(st)||'🧤'}</div><h1 style="margin:8px 0">Konec zápasu!</h1>
+ const st=pct>=90?3:pct>=70?2:pct>=40?1:0,L=lvl(),esc=t=>String(t).replace(/</g,'&lt;'),rv=M.exam?`<h2>Rozbor generálky (orientačně ≈ ${Math.round(pct/2)} z 50 bodů)</h2><div class="panel">${M.list.map((q,i)=>M.res[i]===true?'':`<div class="rv"><i>✗</i> ${esc(q.q)}<br>Tvoje odpověď: ${esc(M.us[i]??'nezodpovězeno')} · správně: <b>${esc(q.a)}</b><br><span class="note">${esc(q.exp)}</span></div>`).join('')||'Bez chyby! 🏆'}</div>`:'';
+ $('result').innerHTML=`<div class="panel center"><div class="big">${'⭐'.repeat(st)||'🧤'}</div><h1 style="margin:8px 0">${M.exam?'Konec generálky!':'Konec zápasu!'}</h1>
 <p class="sum">Dan vstřelil <b>${M.c}</b> gólů z ${n} · ${pct} % · ⏱ ${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}</p>
 <p class="gold">${pct===100?'🏆 Dokonalý zápas!':pct>=80?'Skvělý výkon, Dan je ve formě!':pct>=60?'Dobrý zápas, ještě kousek!':pct>=40?'Každý trénink tě posune dál. Zkus odvetu!':'Každý šampion trénuje – zkus odvetu!'}</p>
 <p class="sum">+${M.xp} XP · nejdelší série ${M.max}${L>before?`<br><span class="gold">⬆ Nová úroveň ${L}: ${TITLES[Math.min(L-1,5)]}!</span>`:''}</p>
-<div class="row" style="margin-top:16px"><button class="ghost" id="h">Domů</button><button class="btn" id="again">Odveta ⚽</button></div></div>`;
+<div class="row" style="margin-top:16px"><button class="ghost" id="h">Domů</button><button class="btn" id="again">Odveta ⚽</button></div></div>${rv}`;
  $('h').onclick=home;$('again').onclick=()=>start(M.mode);show('result');if(pct>=70){beep(523);setTimeout(()=>beep(659),120);setTimeout(()=>beep(784,.25),240)}}
 // ---- Statistiky ----
 function report(){const w=Date.now()-7*864e5,H=S.hist.filter(x=>new Date(x.d)>=w),n=H.reduce((a,x)=>a+x.n,0),c=H.reduce((a,x)=>a+x.c,0),s=H.reduce((a,x)=>a+x.s,0);
  const T=Object.entries(S.topics).filter(x=>x[1].t>=3).map(([k,v])=>[k,Math.round(v.c/v.t*100)]).sort((a,b)=>a[1]-b[1]),f=a=>a.map(x=>x[0]+' ('+x[1]+' %)').join(', ');
  return `<p><b>Posledních 7 dní:</b> ${H.length} zápasů, úspěšnost ${n?Math.round(c/n*100):0} %, ${Math.round(s/60)} min tréninku. Denní série: ${S.streak}.</p><p><b>Doporučeno procvičit:</b> ${f(T.filter(x=>x[1]<70).slice(0,3))||'zatím nic zásadního'}.</p><p><b>Silné stránky:</b> ${f(T.filter(x=>x[1]>=80).slice(-3).reverse())||'zatím málo dat'}.</p>`}
 function stats(){const T=Object.entries(S.topics).map(([k,v])=>[k,Math.round(v.c/v.t*100)]).sort((a,b)=>a[1]-b[1]),{g}=tot();
- const B=[['🎩','Hattrick','3 správně za sebou',(S.mc||0)>=3],['🖐','Pětka','5 správně za sebou',(S.mc||0)>=5],['🧤','Čisté konto','10 z 10 v zápase',(S.pf||0)>=1],['📅','Týden v kuse','7 dní trénink',S.streak>=7],['⚽','Stovka gólů','100 správných',g>=100],['🏆','Cermat 80 %','zápas na 80 %+',(S.best.cermat||0)>=80],['🎯','Všestranný','zahraj všech 5 zápasů',MODES.every(m=>S.best[m[0]]!=null)]];
+ const B=[['🎩','Hattrick','3 správně za sebou',(S.mc||0)>=3],['🖐','Pětka','5 správně za sebou',(S.mc||0)>=5],['🧤','Čisté konto','10 z 10 v zápase',(S.pf||0)>=1],['📅','Týden v kuse','7 dní trénink',S.streak>=7],['⚽','Stovka gólů','100 správných',g>=100],['🏆','Cermat 80 %','zápas na 80 %+',(S.best.cermat||0)>=80],['🎯','Všestranný','zahraj všech 5 zápasů',BASE.every(m=>S.best[m[0]]!=null)]];
  $('stats').innerHTML=`<button class="ghost" id="b">← Domů</button><h2>Trofeje</h2><div class="badges">${B.map(x=>`<div class="bd${x[3]?'':' off'}">${x[0]} <b>${x[1]}</b>${x[2]}</div>`).join('')}</div>
 <h2>Přehled pro rodiče</h2><div class="panel rep">${report()}<button class="ghost" id="pr" style="width:100%;margin-top:8px">🖨 Vytisknout / uložit jako PDF</button></div>
 <h2>Témata (nejslabší nahoře)</h2><div class="panel">${T.length?T.map(t=>`<div class="t"><span>${t[0]}</span><div class="bar ${t[1]<60?'w':''}"><i style="width:${t[1]}%"></i></div><b>${t[1]} %</b></div>`).join(''):'<span class="note">Odehraj první zápas a tady se objeví výsledky.</span>'}</div>
@@ -242,6 +292,15 @@ function stats(){const T=Object.entries(S.topics).map(([k,v])=>[k,Math.round(v.c
  $('rs').onclick=()=>{if(confirm('Opravdu smazat XP, statistiky i chyby?')){localStorage.removeItem(LS);location.reload()}};show('stats')}
 // ---- Ovládání ----
 $('go').onclick=()=>answer();$('skip').onclick=()=>answer(true);$('next').onclick=next;$('quit').onclick=()=>{if(confirm('Opustit zápas? Průběh se nepočítá.'))home()};
+$('keys').onclick=e=>{const b=e.target.closest('button');if(b){$('ans').value+=b.dataset.k;$('ans').focus()}};$('opts').onclick=e=>{const b=e.target.closest('button');if(b)answer(false,b.dataset.v)};
+const pcv=$('pcv'),pcx=pcv.getContext('2d');let pDown=false,pEr=false;
+function pSz(){const d=devicePixelRatio||1;pcv.width=pcv.clientWidth*d;pcv.height=pcv.clientHeight*d;pcx.setTransform(d,0,0,d,0,0);pcx.lineCap=pcx.lineJoin='round'}
+function pClr(){pcx.save();pcx.setTransform(1,0,0,1,0,0);pcx.clearRect(0,0,pcv.width,pcv.height);pcx.restore()}
+pcv.onpointerdown=e=>{pDown=true;pcv.setPointerCapture(e.pointerId);pcx.beginPath();pcx.moveTo(e.offsetX,e.offsetY);pcx.globalCompositeOperation=pEr?'destination-out':'source-over';pcx.strokeStyle='#fff';pcx.lineWidth=pEr?22:2.6;pcx.lineTo(e.offsetX+.1,e.offsetY);pcx.stroke()};
+pcv.onpointermove=e=>{if(pDown){pcx.lineTo(e.offsetX,e.offsetY);pcx.stroke()}};
+pcv.onpointerup=pcv.onpointercancel=()=>{pDown=false};
+$('ptog').onclick=()=>{const h=$('ppad').hidden=!$('ppad').hidden;$('ptog').textContent=h?'✏️ Papír na počítání':'✏️ Skrýt papír';if(!h)pSz()};
+$('pers').onclick=()=>{pEr=!pEr;$('pers').textContent=pEr?'✏️ Tužka':'🧽 Guma'};$('pclr').onclick=pClr;
 $('snd').onclick=()=>{S.sound=S.sound?0:1;save();head()};
 $('ans').addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('ans').disabled)answer()});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('next').hidden&&!$('game').hidden)next()});

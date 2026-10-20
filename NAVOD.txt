@@ -18,3 +18,5 @@ JAK TO ZPROVOZNIT
 6. Nechte aplikaci jednou načíst, dokud je internet dostupný. Potom by se měla otevřít i offline.
 
 Pokud se soubory nahrávají do podsložky webu, nahrajte je všechny společně do téže podsložky; nepřejmenovávejte service-worker.js ani manifest.webmanifest.
+
+AKTUALIZACE: po nahrání nové verze otevřete aplikaci dvakrát (poprvé se stáhne novinka, podruhé se objeví). Postup Danových XP a chyb zůstává zachován.
